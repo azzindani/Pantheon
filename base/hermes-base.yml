@@ -1,19 +1,7 @@
 services:
-  hermes-agent:
-    image: ghcr.io/hostinger/hvps-hermes-agent:latest
-    restart: unless-stopped
-    ports:
-      - "4860"
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`)
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.entrypoints=websecure
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
-      - traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=4860
-    env_file:
-      - .env
-    volumes:
-      - ./data:/opt/data
+  # NOTE: the original generic "hermes-agent" service was removed — replaced by the
+  # CFO (service "plutus"), which took over this agent's Telegram bot. The dashboard
+  # below still serves the old data dir (./data) for admin/inspection.
 
   # Hermes web dashboard (config / API keys / sessions). Same image + data dir
   # as the agent, run as the hermes user. Binds 0.0.0.0 so the caddy-router can
