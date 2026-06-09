@@ -5,6 +5,7 @@
 #   ./pair-agent.sh <name> <telegram_bot_token> <allowed_user_ids> [home_channel]
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+HERMES_DIR=/docker/hermes-agent-z4gq
 
 NAME="${1:?usage: pair-agent.sh <name> <bot_token> <allowed_user_ids> [home_channel]}"
 BOT_TOKEN="${2:?need a Telegram bot token from @BotFather}"
@@ -24,6 +25,6 @@ sed -i '/^TELEGRAM_/d' "$ENVF"
 chmod 600 "$ENVF"; chown 10000:10000 "$ENVF" 2>/dev/null || true
 
 echo "==> paired '$SAFE' — recreating service to load the token"
-( cd "$ROOT" && docker compose up -d --force-recreate "$SAFE" >/dev/null )
-echo "    watch:   docker compose -f $ROOT/docker-compose.yml logs -f $SAFE"
+( cd "$HERMES_DIR" && docker compose up -d --force-recreate "$SAFE" >/dev/null )
+echo "    watch:   (cd $HERMES_DIR && docker compose logs -f $SAFE)"
 echo "    healthy: '[Telegram] Connected to Telegram (polling mode)'"

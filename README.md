@@ -8,28 +8,37 @@ Cloned from the Hostinger Hermes image (`ghcr.io/hostinger/hvps-hermes-agent`),
 chosen because its data dir is bind-mounted, so each agent's whole brain is a
 plain host folder you can copy, reset, back up, and inspect.
 
-**The whole fleet is ONE compose project (`pantheon`)** = one stack/group in
-Docker, with one service per agent. Each service still bind-mounts its own
-isolated brain at `agents/<name>/data`, so isolation is unchanged — only the
-grouping is unified (no more one-stack-per-agent clutter).
+**Every agent runs in the SAME compose project as the existing Hostinger agent —
+`hermes-agent-z4gq`** — so the whole thing is ONE group/stack (the original
+`hermes-agent` + `hermes-dashboard` + the ten fleet agents), not a separate
+project. `gen-compose.sh` writes `/docker/hermes-agent-z4gq/docker-compose.yml`
+as `base/hermes-base.yml` (the pristine Hostinger services) + one service per
+agent. Each agent still bind-mounts its own isolated brain at
+`/docker/pantheon/agents/<name>/data`.
+
+This control dir (`/docker/pantheon/`) holds the scripts, personas, seed, and
+per-agent brains; the **generated compose lives in the hermes dir**, and that's
+where you run `docker compose`.
 
 ## Layout
 
 ```
-docker-compose.yml         # GENERATED — project "pantheon", one service per agent (gitignored)
-gen-compose.sh             # regenerates docker-compose.yml from the agents/ dirs
-shared.env                 # canonical store: OpenRouter+NVIDIA keys + ttyd admin login
-seed/                      # blank-slate brain: shared config/skills, empty memory & persona
-personas/<name>.md         # optional: persona text picked up at spawn time
-agents/<name>/data/        # one agent's isolated brain (SOUL.md, memories/, kanban.db, sessions/)
-  └─ .env                  #   what the gateway reads at boot: provider keys + this bot's Telegram token
-build-seed.sh              # (re)build seed/ from a reference Hermes data dir
-spawn-agent.sh             # create a new agent (regenerates compose, starts its service)
-pair-agent.sh              # attach a Telegram bot to a deployed agent
+/docker/pantheon/            # control dir (scripts + data; in git)
+  base/hermes-base.yml       #   pristine Hostinger compose (the 2 original services)
+  gen-compose.sh             #   writes /docker/hermes-agent-z4gq/docker-compose.yml = base + agents
+  shared.env                 #   OpenRouter+NVIDIA keys + ttyd admin login (gitignored)
+  seed/                      #   blank-slate brain: shared config/skills, empty memory & persona
+  personas/<name>.md         #   optional: persona text picked up at spawn time
+  agents/<name>/data/        #   one agent's isolated brain (SOUL.md, memories/, kanban.db, .env)
+  build-seed.sh  spawn-agent.sh  pair-agent.sh
+/docker/hermes-agent-z4gq/
+  docker-compose.yml         # GENERATED — project hermes-agent-z4gq (run docker compose HERE)
 ```
 
-All `docker compose` commands run from `/docker/pantheon/` and target a service
-by its agent name, e.g. `docker compose logs -f athena`, `docker compose up -d --force-recreate plutus`.
+Manage the fleet from `/docker/hermes-agent-z4gq/`, targeting a service by agent
+name — e.g. `docker compose logs -f athena`, `docker compose up -d --force-recreate plutus`.
+(The original `hermes-agent`/`hermes-dashboard` services are in the same group; don't recreate
+them unless you mean to.)
 
 ## What's shared vs. isolated
 
@@ -52,10 +61,10 @@ by its agent name, e.g. `docker compose logs -f athena`, `docker compose up -d -
 1. **Make its bot** in Telegram with [@BotFather](https://t.me/BotFather) → `/newbot` → copy the token.
    Each agent needs its **own** bot — a token can only be polled by one process.
 2. *(optional)* Write its persona to `personas/<name>.md` (or edit `data/SOUL.md` after spawn).
-3. Spawn (it regenerates the compose and starts the service automatically):
+3. Spawn from `/docker/pantheon/` (it regenerates the compose and starts the service automatically):
    ```bash
    ./spawn-agent.sh athena <BOT_TOKEN> <YOUR_TELEGRAM_USER_ID>
-   docker compose logs -f athena
+   (cd /docker/hermes-agent-z4gq && docker compose logs -f athena)
    ```
    Or deploy unpaired now and pair later: `./spawn-agent.sh athena` then `./pair-agent.sh athena <BOT_TOKEN> <USER_ID>`.
    Find `<YOUR_TELEGRAM_USER_ID>` by messaging `@userinfobot`.
@@ -80,15 +89,16 @@ by its agent name, e.g. `docker compose logs -f athena`, `docker compose up -d -
 
 ## Reset / back up / remove an agent
 
-(run from `/docker/pantheon/`)
+(brains live under `/docker/pantheon/agents/`; `docker compose` runs in `/docker/hermes-agent-z4gq/`)
 ```bash
+cd /docker/pantheon
 # back up a brain
 tar czf athena-brain-$(date +%F).tgz -C agents/athena data
 # wipe its memory but keep persona+bot (give it amnesia)
 : > agents/athena/data/memories/MEMORY.md ; : > agents/athena/data/memories/USER.md
-rm -f agents/athena/data/sessions/* ; docker compose up -d --force-recreate athena
+rm -f agents/athena/data/sessions/* ; (cd /docker/hermes-agent-z4gq && docker compose up -d --force-recreate athena)
 # remove entirely: stop+remove the service, drop its dir, regenerate the compose
-docker compose rm -sf athena && rm -rf agents/athena && ./gen-compose.sh
+(cd /docker/hermes-agent-z4gq && docker compose rm -sf athena) && rm -rf agents/athena && ./gen-compose.sh
 ```
 
 ## Optional: web access via caddy-router

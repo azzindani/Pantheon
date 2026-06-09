@@ -9,6 +9,7 @@
 # Pair later with:  ./pair-agent.sh <name> <bot_token> <allowed_user_ids>
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+HERMES_DIR=/docker/hermes-agent-z4gq   # the fleet lives in THIS compose project (one group)
 
 NAME="${1:?usage: spawn-agent.sh <name> [bot_token] [allowed_user_ids] [home_channel]}"
 BOT_TOKEN="${2:-}"; ALLOWED="${3:-}"; HOME_CHANNEL="${4:-}"
@@ -49,12 +50,12 @@ chmod 600 "$DIR/data/.env"
 mkdir -p "$DIR/data/logs"; : > "$DIR/data/logs/gateway.log"
 chown -R 10000:10000 "$DIR/data" 2>/dev/null || true
 
-# regenerate the single fleet compose and start just this service
+# regenerate the hermes-agent-z4gq compose (base + all agents) and start this service
 "$ROOT/gen-compose.sh" >/dev/null
-( cd "$ROOT" && docker compose up -d "$SAFE" >/dev/null 2>&1 ) \
-  && echo "    started service '$SAFE' in project 'pantheon'" \
-  || echo "    created; start with: docker compose up -d $SAFE"
+( cd "$HERMES_DIR" && docker compose up -d "$SAFE" >/dev/null 2>&1 ) \
+  && echo "    started service '$SAFE' in group 'hermes-agent-z4gq'" \
+  || echo "    created; start with: (cd $HERMES_DIR && docker compose up -d $SAFE)"
 
 echo "==> agent '$SAFE' ready (paired=$PAIRED)"
-echo "    logs:  docker compose -f $ROOT/docker-compose.yml logs -f $SAFE"
+echo "    logs:  (cd $HERMES_DIR && docker compose logs -f $SAFE)"
 [ "$PAIRED" = no ] && echo "    pair:  ./pair-agent.sh $SAFE <bot_token> <allowed_user_ids>"

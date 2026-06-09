@@ -1,0 +1,32 @@
+services:
+  hermes-agent:
+    image: ghcr.io/hostinger/hvps-hermes-agent:latest
+    restart: unless-stopped
+    ports:
+      - "4860"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+      - traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=4860
+    env_file:
+      - .env
+    volumes:
+      - ./data:/opt/data
+
+  # Hermes web dashboard (config / API keys / sessions). Same image + data dir
+  # as the agent, run as the hermes user. Binds 0.0.0.0 so the caddy-router can
+  # reach it on the docker network; it has NO auth of its own (--insecure), so
+  # it must only ever be exposed behind the SSO gate (hermes.dash.example.com).
+  # No published host port — internal to the docker network only.
+  hermes-dashboard:
+    image: ghcr.io/hostinger/hvps-hermes-agent:latest
+    restart: unless-stopped
+    entrypoint: ["gosu", "hermes", "hermes", "dashboard",
+                 "--insecure", "--host", "0.0.0.0", "--port", "9119",
+                 "--skip-build", "--no-open"]
+    env_file:
+      - .env
+    volumes:
+      - ./data:/opt/data
