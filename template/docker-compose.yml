@@ -1,0 +1,16 @@
+services:
+  agent:
+    image: ghcr.io/hostinger/hvps-hermes-agent:latest
+    container_name: __NAME__-agent
+    restart: unless-stopped
+    # shared.env supplies the ttyd admin login (ADMIN_USERNAME/ADMIN_PASSWORD) to the
+    # container env. The gateway itself reads provider keys + Telegram token from
+    # /opt/data/.env (i.e. ./data/.env) — written per-agent by spawn-agent.sh.
+    env_file:
+      - ../../shared.env
+    volumes:
+      - ./data:/opt/data            # this agent's isolated brain (persona, memories, sessions, tasks, AND its .env)
+    # ttyd admin terminal on a random host port. Telegram is OUTBOUND polling — it needs
+    # no inbound port, so an agent is fully functional even with this removed.
+    ports:
+      - "4860"

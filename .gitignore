@@ -1,0 +1,9 @@
+# ── never commit secrets ──
+*.env
+**/.env
+shared.env
+
+# ── generated per-agent brains (memory + data/.env) and the large blank-slate seed ──
+/agents/*
+!/agents/.gitkeep
+/seed/
