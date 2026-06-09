@@ -8,20 +8,28 @@ Cloned from the Hostinger Hermes image (`ghcr.io/hostinger/hvps-hermes-agent`),
 chosen because its data dir is bind-mounted, so each agent's whole brain is a
 plain host folder you can copy, reset, back up, and inspect.
 
+**The whole fleet is ONE compose project (`pantheon`)** = one stack/group in
+Docker, with one service per agent. Each service still bind-mounts its own
+isolated brain at `agents/<name>/data`, so isolation is unchanged — only the
+grouping is unified (no more one-stack-per-agent clutter).
+
 ## Layout
 
 ```
+docker-compose.yml         # GENERATED — project "pantheon", one service per agent (gitignored)
+gen-compose.sh             # regenerates docker-compose.yml from the agents/ dirs
 shared.env                 # canonical store: OpenRouter+NVIDIA keys + ttyd admin login
 seed/                      # blank-slate brain: shared config/skills, empty memory & persona
-template/docker-compose.yml
 personas/<name>.md         # optional: persona text picked up at spawn time
-agents/<name>/             # one generated agent
-  ├─ data/                 #   its isolated brain  (SOUL.md, memories/, kanban.db, sessions/)
-  │   └─ .env              #   what the gateway reads at boot: provider keys + this bot's Telegram token
-  └─ docker-compose.yml
+agents/<name>/data/        # one agent's isolated brain (SOUL.md, memories/, kanban.db, sessions/)
+  └─ .env                  #   what the gateway reads at boot: provider keys + this bot's Telegram token
 build-seed.sh              # (re)build seed/ from a reference Hermes data dir
-spawn-agent.sh             # create a new agent
+spawn-agent.sh             # create a new agent (regenerates compose, starts its service)
+pair-agent.sh              # attach a Telegram bot to a deployed agent
 ```
+
+All `docker compose` commands run from `/docker/pantheon/` and target a service
+by its agent name, e.g. `docker compose logs -f athena`, `docker compose up -d --force-recreate plutus`.
 
 ## What's shared vs. isolated
 
@@ -44,13 +52,14 @@ spawn-agent.sh             # create a new agent
 1. **Make its bot** in Telegram with [@BotFather](https://t.me/BotFather) → `/newbot` → copy the token.
    Each agent needs its **own** bot — a token can only be polled by one process.
 2. *(optional)* Write its persona to `personas/<name>.md` (or edit `data/SOUL.md` after spawn).
-3. Spawn and start:
+3. Spawn (it regenerates the compose and starts the service automatically):
    ```bash
    ./spawn-agent.sh athena <BOT_TOKEN> <YOUR_TELEGRAM_USER_ID>
-   cd agents/athena && docker compose up -d && docker compose logs -f
+   docker compose logs -f athena
    ```
+   Or deploy unpaired now and pair later: `./spawn-agent.sh athena` then `./pair-agent.sh athena <BOT_TOKEN> <USER_ID>`.
    Find `<YOUR_TELEGRAM_USER_ID>` by messaging `@userinfobot`.
-   Healthy looks like: `[Telegram] Connected to Telegram (polling mode)` + `Gateway running with N platform(s)`.
+   Healthy looks like: `[Telegram] Connected to Telegram (polling mode)`.
 
 ## Gotchas (baked in from prior ops)
 
@@ -67,18 +76,19 @@ spawn-agent.sh             # create a new agent
   *new* agents; edit a live agent's `data/config.yaml` for just that one.
 - **Rotating the OpenRouter key:** update `shared.env`, then re-stamp live agents —
   `for d in agents/*/data; do sed -i "/^OPENROUTER_API_KEY=/d" "$d/.env"; grep '^OPENROUTER_API_KEY=' shared.env >> "$d/.env"; done` —
-  then `docker compose restart` each. New agents pick it up automatically.
+  then `docker compose up -d --force-recreate`. New agents pick it up automatically.
 
 ## Reset / back up / remove an agent
 
+(run from `/docker/pantheon/`)
 ```bash
 # back up a brain
 tar czf athena-brain-$(date +%F).tgz -C agents/athena data
 # wipe its memory but keep persona+bot (give it amnesia)
 : > agents/athena/data/memories/MEMORY.md ; : > agents/athena/data/memories/USER.md
-rm -f agents/athena/data/sessions/* ; cd agents/athena && docker compose up -d --force-recreate
-# remove entirely
-cd agents/athena && docker compose down && cd ../.. && rm -rf agents/athena
+rm -f agents/athena/data/sessions/* ; docker compose up -d --force-recreate athena
+# remove entirely: stop+remove the service, drop its dir, regenerate the compose
+docker compose rm -sf athena && rm -rf agents/athena && ./gen-compose.sh
 ```
 
 ## Optional: web access via caddy-router

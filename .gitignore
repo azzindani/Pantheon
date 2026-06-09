@@ -3,6 +3,9 @@
 **/.env
 shared.env
 
+# ── generated artifact (rebuilt by gen-compose.sh from the agents/ dirs) ──
+/docker-compose.yml
+
 # ── generated per-agent brains (memory + data/.env) and the large blank-slate seed ──
 /agents/*
 !/agents/.gitkeep
