@@ -29,8 +29,11 @@ where you run `docker compose`.
   shared.env                 #   OpenRouter+NVIDIA keys + ttyd admin login (gitignored)
   seed/                      #   blank-slate brain: shared config/skills, empty memory & persona
   personas/<name>.md         #   optional: persona text picked up at spawn time
+  cron-prompts/<name>.md     #   hourly-briefing prompt per agent (used by add-cron.sh)
+  web-helpers/               #   websearch.py / webfetch.py (deployed into each agent's data/bin)
   agents/<name>/data/        #   one agent's isolated brain (SOUL.md, memories/, kanban.db, .env)
-  build-seed.sh  spawn-agent.sh  pair-agent.sh
+  build-seed.sh  spawn-agent.sh  pair-agent.sh  add-cron.sh  gen-compose.sh
+  ci/checks.sh               #   the checks run locally and by .github/workflows/ci.yml
 /docker/hermes-agent-z4gq/
   docker-compose.yml         # GENERATED — project hermes-agent-z4gq (run docker compose HERE)
 ```
@@ -100,6 +103,38 @@ rm -f agents/athena/data/sessions/* ; (cd /docker/hermes-agent-z4gq && docker co
 # remove entirely: stop+remove the service, drop its dir, regenerate the compose
 (cd /docker/hermes-agent-z4gq && docker compose rm -sf athena) && rm -rf agents/athena && ./gen-compose.sh
 ```
+
+## Hourly research briefings (cron)
+
+Each agent can run an hourly briefing that researches a deep/edge topic in its
+domain and delivers it to the owner's Telegram DM.
+
+```bash
+./add-cron.sh plutus 0      # minute 0, hours 05-21, Asia/Jakarta, -> telegram DM
+./add-cron.sh athena 20     # stagger minutes so agents don't all fire at once
+```
+
+- The prompt comes from `cron-prompts/<name>.md`; jobs **store the prompt at
+  create time**, so after editing a prompt you must remove+recreate the job
+  (`docker exec -u 10000 hermes-<name> hermes cron remove briefing`, then re-add).
+- Timezone is `Asia/Jakarta`, read from each agent's `config.yaml`
+  (`timezone: Asia/Jakarta`); a gateway **restart** is needed for the scheduler
+  to pick up a timezone change.
+- **Run cron commands as the hermes user (`-u 10000`)** — `add-cron.sh` does this.
+  Creating a job as root leaves `/opt/data/cron/jobs.json` root-owned and the
+  scheduler fails with `EACCES`.
+- **Deliveries only arrive after you open each bot in Telegram and press
+  `/start`** (Telegram blocks bot-initiated DMs otherwise).
+- Manage: `docker exec -u 10000 hermes-<name> hermes cron list|pause|resume|remove ...`
+
+## Web access (local SearXNG, no API key)
+
+The built-in `web_search` needs a paid key (Exa/Tavily/Firecrawl) and the browser
+needs Chrome (excluded from the seed), so agents research via the local SearXNG
+instance instead. `web-helpers/{websearch,webfetch}.py` are installed into each
+agent's `data/bin/` and query `http://kea-prod-searxng-1:8080`. For that to work,
+`gen-compose.sh` joins every agent to the external **`kea-prod_default`** network
+(where SearXNG lives) — so if that stack's network is recreated, recreate the agents.
 
 ## Optional: web access via caddy-router
 
