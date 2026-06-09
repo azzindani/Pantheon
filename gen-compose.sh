@@ -34,8 +34,15 @@ IMG="ghcr.io/hostinger/hvps-hermes-agent:latest"
       - ${ROOT}/agents/${a}/data:/opt/data
     ports:
       - "4860"
+    networks:
+      - default
+      - kea-prod_default
 SVC
   done
   echo "# pantheon agents: ${n}"
+  echo ""
+  echo "networks:"
+  echo "  kea-prod_default:"
+  echo "    external: true   # the local SearXNG (kea-prod-searxng-1) lives here"
 } > "$OUT"
 echo "wrote $OUT (base + ${n:-0} agents) — all under project 'hermes-agent-z4gq'"
