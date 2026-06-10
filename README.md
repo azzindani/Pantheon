@@ -14,22 +14,22 @@ plain host folder you can copy, reset, back up, and inspect.
 project. `gen-compose.sh` writes `/docker/hermes-agent-z4gq/docker-compose.yml`
 as `base/hermes-base.yml` (the pristine Hostinger services) + one service per
 agent. Each agent still bind-mounts its own isolated brain at
-`/docker/pantheon/agents/<name>/data`.
+`/root/Pantheon/agents/<name>/data`.
 
-This control dir (`/docker/pantheon/`) holds the scripts, personas, seed, and
+This control dir (`/root/Pantheon/`) holds the scripts, personas, seed, and
 per-agent brains; the **generated compose lives in the hermes dir**, and that's
 where you run `docker compose`.
 
 ## Layout
 
 ```
-/docker/pantheon/            # control dir (scripts + data; in git)
+/root/Pantheon/            # control dir (scripts + data; in git)
   base/hermes-base.yml       #   pristine Hostinger compose (the 2 original services)
   gen-compose.sh             #   writes /docker/hermes-agent-z4gq/docker-compose.yml = base + agents
   shared.env                 #   OpenRouter+NVIDIA keys + ttyd admin login (gitignored)
   seed/                      #   blank-slate brain: shared config/skills, empty memory & persona
   personas/<name>.md         #   optional: persona text picked up at spawn time
-  cron-prompts/<name>.md     #   hourly-briefing prompt per agent (used by add-cron.sh)
+  cron-prompts/<name>.md     #   2-hour briefing prompt per agent (used by add-cron.sh)
   web-helpers/               #   websearch.py / webfetch.py (deployed into each agent's data/bin)
   agents/<name>/data/        #   one agent's isolated brain (SOUL.md, memories/, kanban.db, .env)
   build-seed.sh  spawn-agent.sh  pair-agent.sh  add-cron.sh  gen-compose.sh
@@ -64,7 +64,7 @@ them unless you mean to.)
 1. **Make its bot** in Telegram with [@BotFather](https://t.me/BotFather) → `/newbot` → copy the token.
    Each agent needs its **own** bot — a token can only be polled by one process.
 2. *(optional)* Write its persona to `personas/<name>.md` (or edit `data/SOUL.md` after spawn).
-3. Spawn from `/docker/pantheon/` (it regenerates the compose and starts the service automatically):
+3. Spawn from `/root/Pantheon/` (it regenerates the compose and starts the service automatically):
    ```bash
    ./spawn-agent.sh athena <BOT_TOKEN> <YOUR_TELEGRAM_USER_ID>
    (cd /docker/hermes-agent-z4gq && docker compose logs -f athena)
@@ -92,9 +92,9 @@ them unless you mean to.)
 
 ## Reset / back up / remove an agent
 
-(brains live under `/docker/pantheon/agents/`; `docker compose` runs in `/docker/hermes-agent-z4gq/`)
+(brains live under `/root/Pantheon/agents/`; `docker compose` runs in `/docker/hermes-agent-z4gq/`)
 ```bash
-cd /docker/pantheon
+cd /root/Pantheon
 # back up a brain
 tar czf athena-brain-$(date +%F).tgz -C agents/athena data
 # wipe its memory but keep persona+bot (give it amnesia)
@@ -104,13 +104,13 @@ rm -f agents/athena/data/sessions/* ; (cd /docker/hermes-agent-z4gq && docker co
 (cd /docker/hermes-agent-z4gq && docker compose rm -sf athena) && rm -rf agents/athena && ./gen-compose.sh
 ```
 
-## Hourly research briefings (cron)
+## Research briefings every 2 hours (cron)
 
-Each agent can run an hourly briefing that researches a deep/edge topic in its
+Each agent can run an 2-hour briefing that researches a deep/edge topic in its
 domain and delivers it to the owner's Telegram DM.
 
 ```bash
-./add-cron.sh plutus 0      # minute 0, hours 05-21, Asia/Jakarta, -> telegram DM
+./add-cron.sh plutus 0      # minute 0, every 2h 05-21, Asia/Jakarta, -> telegram DM
 ./add-cron.sh athena 20     # stagger minutes so agents don't all fire at once
 ```
 

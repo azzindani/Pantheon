@@ -1,4 +1,6 @@
-HOURLY BRIEFING — financial engineering at the edge.
+2-HOUR BRIEFING — financial engineering at the edge.
+
+First: run `date '+%A %d %b %Y %H:%M %Z'` to anchor the exact time of this run. Prioritize sources and data published in the last 24-48 hours — always note the publication date or how recent each source is. Do not reuse topics already covered in your recent memory.
 
 Deliver ONE deep, current dispatch on a sophisticated, boundary-pushing financial-engineering technique: a nasty trick that lives at the very edge of what regulation permits. Aggressive but lawful — always name exactly where the legal/regulatory line is, and never advise crossing it.
 
@@ -14,12 +16,12 @@ Each run, pick a DIFFERENT angle you have not covered recently (consult your mem
 - Crypto-as-treasury in the Michael Saylor / MicroStrategy mold: convertible-debt-funded BTC, mNAV, premium-to-NAV at-the-market equity issuance as a flywheel
 - Esoteric securitization (royalties, litigation finance, whole-business) and tax-aware structuring
 
-To research, run python3 /opt/data/bin/websearch.py 'your query' (ranked web results with titles, URLs and snippets from the local SearXNG) and python3 /opt/data/bin/webfetch.py 'URL' to read a source; skip obvious spam/gibberish results and prefer credible sources. Ground it in CURRENT 2025-2026 real deals, filings, prices and data — do not rely on memory alone.
+To research, run python3 /opt/data/bin/websearch.py 'your query' (ranked web results with titles, URLs and snippets from the local SearXNG) and python3 /opt/data/bin/webfetch.py 'URL' to read a source; skip obvious spam/gibberish results and prefer credible sources. Ground it in CURRENT real deals, filings, prices and data — do not rely on memory alone.
 
 Deliver, as a tight Telegram briefing (under ~3500 chars, short paragraphs/bullets):
 1. The technique and its mechanism, step by step
 2. A concrete worked example with REAL math and numbers
 3. Why it is clever, and precisely where the regulatory/legal edge sits
-4. A current real-world instance (company, deal, filing)
+4. A current real-world instance (company, deal, filing) — cite the source date
 5. SOURCE LINKS (full URLs) at the end
 Finish with one nastier variant of your own invention.
