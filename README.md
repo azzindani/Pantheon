@@ -29,7 +29,7 @@ where you run `docker compose`.
   shared.env                 #   OpenRouter+NVIDIA keys + ttyd admin login (gitignored)
   seed/                      #   blank-slate brain: shared config/skills, empty memory & persona
   personas/<name>.md         #   optional: persona text picked up at spawn time
-  cron-prompts/<name>.md     #   2-hour briefing prompt per agent (used by add-cron.sh)
+  cron-prompts/<name>.md     #   3-hour briefing prompt per agent (used by add-cron.sh)
   web-helpers/               #   websearch.py / webfetch.py (deployed into each agent's data/bin)
   agents/<name>/data/        #   one agent's isolated brain (SOUL.md, memories/, kanban.db, .env)
   build-seed.sh  spawn-agent.sh  pair-agent.sh  add-cron.sh  gen-compose.sh
@@ -104,13 +104,13 @@ rm -f agents/athena/data/sessions/* ; (cd /docker/hermes-agent-z4gq && docker co
 (cd /docker/hermes-agent-z4gq && docker compose rm -sf athena) && rm -rf agents/athena && ./gen-compose.sh
 ```
 
-## Research briefings every 2 hours (cron)
+## Research briefings every 3 hours (cron)
 
-Each agent can run an 2-hour briefing that researches a deep/edge topic in its
+Each agent can run a 3-hour briefing that researches a deep/edge topic in its
 domain and delivers it to the owner's Telegram DM.
 
 ```bash
-./add-cron.sh plutus 0      # minute 0, every 2h 05-21, Asia/Jakarta, -> telegram DM
+./add-cron.sh plutus 0      # minute 0, every 3h 05-21, Asia/Jakarta, -> telegram DM
 ./add-cron.sh athena 20     # stagger minutes so agents don't all fire at once
 ```
 

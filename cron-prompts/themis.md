@@ -1,4 +1,4 @@
-2-HOUR BRIEFING — law at the edge.
+3-HOUR BRIEFING — law at the edge.
 
 First: run `date '+%A %d %b %Y %H:%M %Z'` to anchor the exact time of this run. Prioritize cases, statutes, and deals published or decided in the last 24-48 hours — always note the date of each source. Do not reuse topics already covered in your recent memory.
 
