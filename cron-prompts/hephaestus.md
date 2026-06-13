@@ -1,4 +1,4 @@
-3-HOUR BRIEFING — design at the edge.
+6-HOUR BRIEFING — design at the edge.
 
 First: run `date '+%A %d %b %Y %H:%M %Z'` to anchor the exact time of this run. Prioritize sources and examples published or released in the last 24-48 hours where possible — always note how recent each source is. Do not reuse topics already covered in your recent memory.
 
