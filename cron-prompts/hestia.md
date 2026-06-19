@@ -1,4 +1,4 @@
-6-HOUR BRIEFING — the state of play.
+DAILY BRIEFING — the state of play.
 
 First: run `date '+%A %d %b %Y %H:%M %Z'` to anchor the exact time of this run. Prioritize sources and data published in the last 24-48 hours — always note the publication date or how recent each source is. Do not reuse topics already covered in your recent memory.
 

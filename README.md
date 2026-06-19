@@ -29,7 +29,7 @@ where you run `docker compose`.
   shared.env                 #   OpenRouter+NVIDIA keys + ttyd admin login (gitignored)
   seed/                      #   blank-slate brain: shared config/skills, empty memory & persona
   personas/<name>.md         #   optional: persona text picked up at spawn time
-  cron-prompts/<name>.md     #   6-hour briefing prompt per agent (used by add-cron.sh)
+  cron-prompts/<name>.md     #   daily briefing prompt per agent (used by add-cron.sh)
   web-helpers/               #   websearch.py / webfetch.py (deployed into each agent's data/bin)
   agents/<name>/data/        #   one agent's isolated brain (SOUL.md, memories/, kanban.db, .env)
   build-seed.sh  spawn-agent.sh  pair-agent.sh  add-cron.sh  gen-compose.sh
@@ -104,15 +104,25 @@ rm -f agents/athena/data/sessions/* ; (cd /docker/hermes-agent-z4gq && docker co
 (cd /docker/hermes-agent-z4gq && docker compose rm -sf athena) && rm -rf agents/athena && ./gen-compose.sh
 ```
 
-## Research briefings every 6 hours (cron)
+## Daily research briefings (cron, weekdays only)
 
-Each agent can run a 6-hour briefing that researches a deep/edge topic in its
-domain and delivers it to the owner's Telegram DM. The fixed schedule fires at
-05:00, 11:00 and 17:00 Asia/Jakarta.
+Each agent runs **one briefing per day, Mondays–Fridays only** (`<min> <hour> * * 1-5`),
+researching a deep/edge topic in its domain and delivering it to the owner's Telegram
+DM. Each agent fires at a **different hour** so briefings arrive spread across the day
+instead of all at once — no weekend noise.
+
+| hour (Asia/Jakarta) | agent | hour | agent |
+|---|---|---|---|
+| 06:00 | hestia | 11:00 | atlas |
+| 07:00 | plutus | 13:00 | peitho |
+| 08:00 | apollo | 14:00 | themis |
+| 09:00 | prometheus | 15:00 | nemesis |
+| 10:00 | athena | 16:00 | hephaestus |
 
 ```bash
-./add-cron.sh plutus 0      # minute 0, every 6h 05-17, Asia/Jakarta, -> telegram DM
-./add-cron.sh athena 20     # stagger minutes so agents don't all fire at once
+./add-cron.sh hestia 6      # hour 6, Mon-Fri, Asia/Jakarta, -> telegram DM
+./add-cron.sh plutus 7      # give each agent its own hour so they don't pile up
+./add-cron.sh apollo 8 30   # optional 3rd arg = minute (default 0)
 ```
 
 - The prompt comes from `cron-prompts/<name>.md`; jobs **store the prompt at
