@@ -34,6 +34,7 @@ where you run `docker compose`.
   agents/<name>/data/        #   one agent's isolated brain (SOUL.md, memories/, kanban.db, .env)
   build-seed.sh  spawn-agent.sh  pair-agent.sh  add-cron.sh  gen-compose.sh
   ci/checks.sh               #   the checks run locally and by .github/workflows/ci.yml
+  backups/                   #   redacted config snapshots of related stacks (see backups/README.md)
 /docker/hermes-agent-z4gq/
   docker-compose.yml         # GENERATED — project hermes-agent-z4gq (run docker compose HERE)
 ```
@@ -157,3 +158,13 @@ caddy owns 80/443 for every site. See the caddy-router notes.
 
 `./build-seed.sh [reference-data-dir]` (default `/docker/hermes-agent-z4gq/data`).
 Only affects agents spawned *after* the rebuild.
+
+## Backups
+
+`backups/` holds point-in-time snapshots of configs for related stacks that live
+outside this repo (e.g. the `hermes-workspace` MCP setup). **Secrets are redacted
+to `${PLACEHOLDER}` form** — supply real values from the relevant `.env` when
+restoring. See [`backups/README.md`](backups/README.md) for what's captured and
+how to restore. Same rule as everywhere else here: never commit real tokens,
+keys, IDs, or `.env` files (the `.gitignore` enforces this; CI also scans tracked
+files for secret-shaped strings).

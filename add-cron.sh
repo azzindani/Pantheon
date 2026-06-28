@@ -13,7 +13,10 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 H=/opt/hermes/.venv/bin/hermes
-USERID=0   # deliver briefings to this Telegram DM (the owner)
+# Owner's Telegram numeric ID for briefing delivery. Kept out of git: set
+# TELEGRAM_OWNER_ID in shared.env (gitignored) or export it before running.
+USERID="${TELEGRAM_OWNER_ID:-$(grep -hE '^TELEGRAM_OWNER_ID=' "$ROOT/shared.env" 2>/dev/null | tail -1 | cut -d= -f2-)}"
+: "${USERID:?set TELEGRAM_OWNER_ID=<your Telegram numeric id> in shared.env (gitignored)}"
 
 NAME="${1:?usage: add-cron.sh <agent-name> <hour 0-23> [minute 0-59]}"
 HOUR="${2:?need an hour 0-23 (give each agent a different hour so briefings spread across the day)}"
