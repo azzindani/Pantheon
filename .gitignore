@@ -3,6 +3,9 @@
 **/.env
 shared.env
 
+# ── local, machine-specific Claude Code overrides ──
+.claude/settings.local.json
+
 # ── generated artifact (rebuilt by gen-compose.sh from the agents/ dirs) ──
 /docker-compose.yml
 
