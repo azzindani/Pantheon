@@ -1,5 +1,15 @@
 # Pantheon
 
+[![CI](https://github.com/azzindani/Pantheon/actions/workflows/ci.yml/badge.svg)](https://github.com/azzindani/Pantheon/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/tag/azzindani/Pantheon?label=release)](https://github.com/azzindani/Pantheon/releases)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
+> **Status: v0.1.0, early/reference.** This is a working setup the author runs
+> personally, published as a reference for the pattern (isolated-brain agent
+> fleet on Hermes) rather than a polished, general-purpose tool. It assumes a
+> Hostinger VPS with the Hermes agent stack already deployed — see
+> [Prerequisites](#prerequisites). See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
 A fleet of distinct Hermes agents. Each agent is its own "human": its own
 **persona**, its own **isolated memory**, its own **Telegram bot** — all sharing
 one OpenRouter key and the same model.
@@ -19,6 +29,17 @@ agent. Each agent still bind-mounts its own isolated brain at
 This control dir (`/root/Pantheon/`) holds the scripts, personas, seed, and
 per-agent brains; the **generated compose lives in the hermes dir**, and that's
 where you run `docker compose`.
+
+## Prerequisites
+
+- A host already running the Hostinger Hermes agent stack (`ghcr.io/hostinger/hvps-hermes-agent`,
+  public image) via Docker Compose — this repo adds a fleet *alongside* that
+  existing deployment, it doesn't stand one up from scratch.
+- `docker` + `docker compose`, `bash`, `python3` with `pyyaml` (used by `gen-compose.sh`/CI).
+- An OpenRouter API key (shared across the fleet) and, per agent you want reachable
+  over Telegram, a bot token from [@BotFather](https://t.me/BotFather).
+- Your own `shared.env` (gitignored, never committed) — see `README`'s
+  [What's shared vs. isolated](#whats-shared-vs-isolated) for the keys it must hold.
 
 ## Layout
 
@@ -107,10 +128,16 @@ rm -f agents/athena/data/sessions/* ; (cd /docker/hermes-agent-z4gq && docker co
 
 ## Daily research briefings (cron, weekdays only)
 
-Each agent runs **one briefing per day, Mondays–Fridays only** (`<min> <hour> * * 1-5`),
+> **Status: opt-in, currently unscheduled.** No agent has a briefing cron job
+> right now — the mechanism below works, but nothing fires until you run
+> `add-cron.sh`.
+
+Each agent *can* run **one briefing per day, Mondays–Fridays only** (`<min> <hour> * * 1-5`),
 researching a deep/edge topic in its domain and delivering it to the owner's Telegram
-DM. Each agent fires at a **different hour** so briefings arrive spread across the day
+DM. Give each agent a **different hour** so briefings arrive spread across the day
 instead of all at once — no weekend noise.
+
+Suggested spread (previously used, all currently unscheduled):
 
 | hour (Asia/Jakarta) | agent | hour | agent |
 |---|---|---|---|
@@ -168,3 +195,9 @@ restoring. See [`backups/README.md`](backups/README.md) for what's captured and
 how to restore. Same rule as everywhere else here: never commit real tokens,
 keys, IDs, or `.env` files (the `.gitignore` enforces this; CI also scans tracked
 files for secret-shaped strings).
+
+## License
+
+Apache License 2.0 — see [LICENSE](LICENSE). This is a personal reference
+project (see [Status](#pantheon) above); issues/PRs aren't actively triaged,
+but the code is free to use, fork, and adapt under the license terms.
